@@ -6,13 +6,15 @@ mod solutions;
 
 fn main() {
     let (data, day) = get_data();
-    println!("Result: {}", solutions::solve(day, data));
+    let (part_one, part_two) = solutions::solve(day, &data);
+    println!("Part one: {}, part two: {}", part_one, part_two);
 }
 
 fn get_data() -> (String, u16) {
     let args: Vec<_> = std::env::args().collect();
 
     let day = args.get(1);
+    let is_test = day.is_some_and(|d| d.chars().last().is_some_and(|c| c == 't'));
 
     let entries: Vec<_> = std::fs::read_dir(DATA_DIR)
         .unwrap_or_else(|e| {
@@ -45,14 +47,18 @@ fn get_data() -> (String, u16) {
         None => entries.last().expect("No files found"),
     };
 
-    let day: u16 = entry
+    let mut day = entry
         .path()
         .file_stem()
         .expect("Invalid file path")
         .to_str()
         .unwrap()
-        .parse()
-        .expect("Non numeric file name");
+        .to_string();
+
+    if is_test {
+        day.pop();
+    }
+
     let data = fs::read_to_string(entry.path()).expect("Failed to read day");
-    (data, day)
+    (data, day.parse().unwrap())
 }
