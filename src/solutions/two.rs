@@ -1,88 +1,83 @@
 pub fn part_one(data: &str) -> i32 {
-    let mut id_sum: i32 = 0;
-    for line in data.lines() {
-        let parts: Vec<_> = line.split(":").collect();
-        let id: i32 = parts[0].split(' ').next_back().unwrap().parse().unwrap();
+    let now = std::time::Instant::now();
+    let ans = data.lines().fold(0, |acc, line| {
+        let (identifier, games) = line.split_once(':').unwrap();
 
-        let games: Vec<_> = parts[1]
+        if !games
             .split(';')
-            .map(|g| {
-                g.trim()
-                    .split(", ")
-                    .map(|m| m.split(' ').collect::<Vec<_>>())
-                    .collect::<Vec<_>>()
+            .map(|g| g.trim().split(", ").map(|m| m.split_once(' ').unwrap()))
+            .any(|mut g| {
+                g.any(|r| {
+                    let number: i32 = r.0.parse().unwrap();
+
+                    match r.1 {
+                        "red" => number > 12,
+                        "green" => number > 13,
+                        "blue" => number > 14,
+                        _ => unimplemented!("Wtf"),
+                    }
+                })
             })
-            .collect();
-
-        let mut valid = true;
-        for game in games {
-            for round in game {
-                let colour = round[1];
-                let number = round[0].parse::<i32>().unwrap();
-                let too_many = match colour {
-                    "red" => number > 12,
-                    "green" => number > 13,
-                    "blue" => number > 14,
-                    _ => unimplemented!("Wtf"),
-                };
-                if too_many {
-                    valid = false;
-                    break;
-                }
-            }
+        {
+            acc + identifier
+                .split_once(' ')
+                .unwrap()
+                .1
+                .parse::<i32>()
+                .unwrap()
+        } else {
+            acc
         }
-        if valid {
-            id_sum += id;
-        }
-    }
+    });
 
-    id_sum
+    let elapsed = now.elapsed();
+    println!("Day 2 part 1: {:?}", elapsed.as_micros());
+    ans
 }
 
 pub fn part_two(data: &str) -> i32 {
-    let mut power_sum: i32 = 0;
-    for line in data.lines() {
-        let mut red_limit = 0;
-        let mut green_limit = 0;
-        let mut blue_limit = 0;
-
-        let games: Vec<_> = line.split(":").collect::<Vec<_>>()[1]
+    let now = std::time::Instant::now();
+    let ans = data.lines().fold(0, |acc, line| {
+        let (r, g, b) = line
+            .split_once(':')
+            .unwrap()
+            .1
             .split(';')
-            .map(|g| {
-                g.trim()
-                    .split(", ")
-                    .map(|m| m.split(' ').collect::<Vec<_>>())
-                    .collect::<Vec<_>>()
-            })
-            .collect();
-
-        for game in games {
-            for round in game {
-                let number = round[0].parse::<i32>().unwrap();
-                let colour = round[1];
-                match colour {
-                    "red" => {
-                        if number > red_limit {
-                            red_limit = number;
+            .map(|g| g.trim().split(", ").map(|m| m.split_once(' ').unwrap()))
+            .fold((0, 0, 0), |(r, g, b), game| {
+                game.fold((r, g, b), |(acc_r, acc_g, acc_b), r| {
+                    let number: i32 = r.0.parse().unwrap();
+                    match r.1 {
+                        "red" => {
+                            if number > acc_r {
+                                (number, acc_g, acc_b)
+                            } else {
+                                (acc_r, acc_g, acc_b)
+                            }
                         }
-                    }
-                    "green" => {
-                        if number > green_limit {
-                            green_limit = number;
+                        "green" => {
+                            if number > acc_g {
+                                (acc_r, number, acc_b)
+                            } else {
+                                (acc_r, acc_g, acc_b)
+                            }
                         }
-                    }
-                    "blue" => {
-                        if number > blue_limit {
-                            blue_limit = number;
+                        "blue" => {
+                            if number > acc_b {
+                                (acc_r, acc_g, number)
+                            } else {
+                                (acc_r, acc_g, acc_b)
+                            }
                         }
+                        _ => unimplemented!("Wtf"),
                     }
-                    _ => unimplemented!("Wtf"),
-                };
-            }
-        }
+                })
+            });
 
-        power_sum += red_limit * green_limit * blue_limit;
-    }
+        acc + r * g * b
+    });
 
-    power_sum
+    let elapsed = now.elapsed();
+    println!("Day 2 part 2: {:?}", elapsed.as_micros());
+    ans
 }

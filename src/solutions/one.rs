@@ -1,36 +1,37 @@
 pub fn part_one(data: &str) -> i32 {
-    data.lines()
-        .map(|line| {
-            let nums = line.chars().filter(|c| c.is_numeric()).collect::<Vec<_>>();
-            let first = nums.first().unwrap().to_owned();
-            let last = nums.last().unwrap().to_owned();
-            let mut number = String::new();
-            number.push(first);
-            number.push(last);
-            number.parse::<i32>().unwrap()
-        })
-        .sum()
+    let now = std::time::Instant::now();
+    let ans = data.lines().fold(0, |acc, line| {
+        let mut nums = line.matches(char::is_numeric);
+        let first = nums.next().unwrap();
+        let last = nums.last().unwrap_or(first);
+        acc + (first.parse::<i32>().unwrap() * 10 + last.parse::<i32>().unwrap())
+    });
+    let elapsed = now.elapsed();
+    println!("Day 1 part 1 time: {}", elapsed.as_micros());
+    ans
 }
 
 pub fn part_two(data: &str) -> i32 {
-    data.lines()
-        .map(|line| {
-            let chars: Vec<_> = line.chars().collect();
-            let mut digits: Vec<i32> = Vec::new();
-            for (i, c) in chars.iter().enumerate() {
-                if c.is_numeric() {
-                    digits.push(c.to_string().parse::<i32>().unwrap());
-                } else if let Some(num) = is_numeric_str(&chars[i..]) {
-                    digits.push(num);
-                }
+    let now = std::time::Instant::now();
+    let ans = data.lines().fold(0, |acc, line| {
+        let chars: Vec<_> = line.chars().collect();
+        let mut digits: Vec<i32> = Vec::new();
+        for (i, c) in chars.iter().enumerate() {
+            if c.is_numeric() {
+                digits.push(c.to_string().parse::<i32>().unwrap());
+            } else if let Some(num) = is_numeric_str(&chars[i..]) {
+                digits.push(num);
             }
-            let first = digits
-                .first()
-                .unwrap_or_else(|| panic!("Failed to get digits from {:?}", chars));
-            let second = digits.last().unwrap_or(first);
-            first * 10 + second
-        })
-        .sum()
+        }
+        let first = digits
+            .first()
+            .unwrap_or_else(|| panic!("Failed to get digits from {:?}", chars));
+        let second = digits.last().unwrap_or(first);
+        acc + (first * 10 + second)
+    });
+    let elapsed = now.elapsed();
+    println!("Day 1 part 2 time: {}", elapsed.as_micros());
+    ans
 }
 
 fn is_numeric_str(chars: &[char]) -> Option<i32> {
@@ -47,8 +48,6 @@ fn is_numeric_str(chars: &[char]) -> Option<i32> {
             }
         }
         't' => {
-            // two
-            // three
             if chars[0..3] == ['t', 'w', 'o'] {
                 Some(2)
             } else if chars.len() >= 5 && chars[0..5] == ['t', 'h', 'r', 'e', 'e'] {
@@ -58,7 +57,6 @@ fn is_numeric_str(chars: &[char]) -> Option<i32> {
             }
         }
         'f' => {
-            // four five
             if chars.len() < 4 {
                 None
             } else if chars[0..4] == ['f', 'o', 'u', 'r'] {
@@ -70,7 +68,6 @@ fn is_numeric_str(chars: &[char]) -> Option<i32> {
             }
         }
         's' => {
-            // six seven
             if chars[0..3] == ['s', 'i', 'x'] {
                 Some(6)
             } else if chars.len() >= 5 && chars[0..5] == ['s', 'e', 'v', 'e', 'n'] {
