@@ -1,4 +1,15 @@
 pub fn part_one(data: &str) -> i32 {
+    let now = std::time::Instant::now();
+
+    let ans = part_one_inner(data);
+
+    let elapsed = now.elapsed();
+    println!("Day 3 part 1: {}", elapsed.as_micros());
+
+    ans
+}
+
+fn part_one_inner(data: &str) -> i32 {
     let mut nums: Vec<Num> = Vec::new();
     let mut gears: Vec<Gear> = Vec::new();
     for (row, line) in data.lines().enumerate() {
@@ -32,6 +43,17 @@ pub fn part_one(data: &str) -> i32 {
 }
 
 pub fn part_two(data: &str) -> i32 {
+    let now = std::time::Instant::now();
+
+    let ans = part_two_inner(data);
+
+    let elapsed = now.elapsed();
+    println!("Day 3 part 2: {}", elapsed.as_micros());
+
+    ans
+}
+
+fn part_two_inner(data: &str) -> i32 {
     let mut nums: Vec<Num> = Vec::new();
     let mut characters: Vec<Gear> = Vec::new();
     for (row, line) in data.lines().enumerate() {
@@ -54,13 +76,16 @@ pub fn part_two(data: &str) -> i32 {
         }
     }
     characters
-        .iter_mut()
+        .iter()
         .filter_map(|c| {
             let mut touches = 0;
             let mut gears = 1;
             for num in &nums {
                 if num.touches(c) {
                     touches += 1;
+                    if touches > 2 {
+                        return None;
+                    }
                     gears *= num.num;
                 }
             }
@@ -91,11 +116,10 @@ impl Num {
     fn new(digits: Vec<(usize, char)>, row: usize) -> Self {
         let start = digits.first().unwrap().0;
         let end = digits.last().unwrap().0;
-        let num = digits.into_iter().map(|(_, d)| d).collect::<Vec<_>>();
-        let mut num_str = String::new();
-        for n in num {
-            num_str.push(n);
-        }
+        let num_str = digits.into_iter().fold(String::new(), |mut str, (_, d)| {
+            str.push(d);
+            str
+        });
         let num = num_str.parse().unwrap();
         Self {
             num,
