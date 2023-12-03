@@ -1,11 +1,12 @@
 mod one;
+mod three;
 mod two;
 
 pub fn solve(day: u16, data: &str) -> (i32, i32) {
     match day {
         1 => (one::part_one(data), one::part_two(data)),
         2 => (two::part_one(data), two::part_two(data)),
-        3 => (42, 42),
+        3 => (three::part_one(data), three::part_two(data)),
         4 => (42, 42),
         5 => (42, 42),
         6 => (42, 42),
