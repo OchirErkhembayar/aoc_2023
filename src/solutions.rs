@@ -1,10 +1,10 @@
 use std::{ffi::OsString, fs, process};
 
+mod five;
 mod four;
 mod one;
 mod three;
 mod two;
-mod five;
 
 const DATA_DIR: &str = "./data";
 
