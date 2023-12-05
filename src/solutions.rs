@@ -2,6 +2,7 @@ mod four;
 mod one;
 mod three;
 mod two;
+mod five;
 
 pub fn solve(day: u16, data: &str) -> (i32, i32) {
     match day {
@@ -9,7 +10,7 @@ pub fn solve(day: u16, data: &str) -> (i32, i32) {
         2 => (two::part_one(data), two::part_two(data)),
         3 => (three::part_one(data), three::part_two(data)),
         4 => (four::part_one(data), four::part_two(data)),
-        5 => (42, 42),
+        5 => (five::part_one(data), five::part_two(data)),
         6 => (42, 42),
         7 => (42, 42),
         8 => (42, 42),
