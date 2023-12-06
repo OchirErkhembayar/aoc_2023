@@ -57,17 +57,8 @@ pub fn part_two_inner(data: &str) -> i32 {
             .unwrap()
     };
 
-    // How to find the min dist time?
-    // pt * time - pt.pow(2) = dist + 1
+    let max_t = ((time as f64 + f64::sqrt((time.pow(2) - 4 * (distance + 1)) as f64)) / 2.0).floor() as i64;
+    let min_t = ((time as f64 - f64::sqrt((time.pow(2) - 4 * (distance + 1)) as f64)) / 2.0).floor() as i64;
 
-    let max_t = (time + f64::sqrt((time.pow(2) - 4 * (distance + 1)) as f64) as i64 + 1) / 2;
-    println!("Max: {max_t}");
-    let min_t = (time - f64::sqrt((time.pow(2) - 4 * (distance + 1)) as f64) as i64 + 1) / 2;
-    println!("Min: {min_t}");
-
-    let possible_pts = 0..=time;
-    let allowed_pts = possible_pts
-        .filter(|pt| (pt * time - pt.pow(2)) > distance)
-        .count();
-    allowed_pts as i32
+    (max_t - min_t) as i32
 }
