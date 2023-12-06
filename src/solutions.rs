@@ -3,6 +3,7 @@ use std::{ffi::OsString, fs, process};
 mod five;
 mod four;
 mod one;
+mod six;
 mod three;
 mod two;
 
@@ -24,7 +25,7 @@ fn solve(day: u16, data: &str) -> (i32, i32) {
         3 => (three::part_one(data), three::part_two(data)),
         4 => (four::part_one(data), four::part_two(data)),
         5 => (five::part_one(data), five::part_two(data)),
-        6 => (42, 42),
+        6 => (six::part_one(data), six::part_two(data)),
         7 => (42, 42),
         8 => (42, 42),
         9 => (42, 42),
@@ -133,5 +134,10 @@ mod test {
         assert_eq!(23441, part_one);
         assert_eq!(5923918, part_two);
         assert("4", 4, 23441, 5923918);
+    }
+
+    #[test]
+    fn day_six() {
+        assert("6", 6, 160816, 46561107);
     }
 }
