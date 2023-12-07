@@ -6,6 +6,7 @@ mod one;
 mod six;
 mod three;
 mod two;
+mod seven;
 
 const DATA_DIR: &str = "./data";
 
@@ -26,7 +27,7 @@ fn solve(day: u16, data: &str) -> (i32, i32) {
         4 => (four::part_one(data), four::part_two(data)),
         5 => (five::part_one(data), five::part_two(data)),
         6 => (six::part_one(data), six::part_two(data)),
-        7 => (42, 42),
+        7 => (seven::part_one(data), seven::part_two(data)),
         8 => (42, 42),
         9 => (42, 42),
         10 => (42, 42),
