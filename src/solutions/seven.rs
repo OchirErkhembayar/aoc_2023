@@ -174,7 +174,6 @@ pub fn part_two_inner(data: &str) -> i32 {
     let mut hands = Vec::new();
     for line in data.lines() {
         let (cards, bid) = line.split_once(' ').unwrap();
-        eprintln!("Cards: {:?}", cards);
         let cards = cards
             .chars()
             .map(|c| match c {
@@ -214,7 +213,6 @@ pub fn part_two_inner(data: &str) -> i32 {
         rank += 1;
         sum += rank * hand.bid;
     }
-    println!("Rank: {rank}");
     sum
 }
 
@@ -257,7 +255,6 @@ impl Cards {
         cards.iter().for_each(|&c| {
             *freqs.entry(c).or_insert(0) += 1;
         });
-        // println!("Freqs: {freqs:?}");
         let mut freqs_vec = freqs
             .clone()
             .iter()
@@ -294,6 +291,9 @@ impl Cards {
                 if jf == 5 {
                     return FIVE_KIND;
                 }
+                if freqs[0].1 == 1 {
+                    return ONE_PAIR;
+                }
                 if pos == 0 {
                     let snd = freqs[1].1;
                     assert!(snd <= jf);
@@ -305,15 +305,11 @@ impl Cards {
                             4 => FOUR_KIND,
                             _ => unreachable!(),
                         },
-                        2 => {
-                            // Minimum 3 pair, possible full house
-                            println!("Freqs: {:?}", freqs);
-                            match snd {
-                                2 => FOUR_KIND,
-                                1 => THREE_KIND,
-                                _ => unreachable!("Snd {} Freqs {:?} J {}", snd, freqs, jf),
-                            }
-                        }
+                        2 => match snd {
+                            2 => FOUR_KIND,
+                            1 => THREE_KIND,
+                            _ => unreachable!("Snd {} Freqs {:?} J {}", snd, freqs, jf),
+                        },
                         1 => TWO_PAIR,
                         _ => unreachable!(),
                     }

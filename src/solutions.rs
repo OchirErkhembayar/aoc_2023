@@ -1,5 +1,6 @@
 use std::{ffi::OsString, fs, process};
 
+mod eight;
 mod five;
 mod four;
 mod nine;
@@ -20,17 +21,17 @@ pub fn run() {
     println!("Part one: {}, part two: {}", part_one, part_two);
 }
 
-fn solve(day: u16, data: &str) -> (i32, i32) {
+fn solve(day: u16, data: &str) -> (i128, i128) {
     match day {
-        1 => (one::part_one(data), one::part_two(data)),
-        2 => (two::part_one(data), two::part_two(data)),
-        3 => (three::part_one(data), three::part_two(data)),
-        4 => (four::part_one(data), four::part_two(data)),
-        5 => (five::part_one(data), five::part_two(data)),
-        6 => (six::part_one(data), six::part_two(data)),
-        7 => (seven::part_one(data), seven::part_two(data)),
-        8 => (42, 42), // Computer crashed and didn't save it somehow :|
-        9 => (nine::part_one(data), nine::part_two(data)),
+        1 => (one::part_one(data).into(), one::part_two(data).into()),
+        2 => (two::part_one(data).into(), two::part_two(data).into()),
+        3 => (three::part_one(data).into(), three::part_two(data).into()),
+        4 => (four::part_one(data).into(), four::part_two(data).into()),
+        5 => (five::part_one(data).into(), five::part_two(data).into()),
+        6 => (six::part_one(data).into(), six::part_two(data).into()),
+        7 => (seven::part_one(data).into(), seven::part_two(data).into()),
+        8 => (eight::part_one(data), eight::part_two(data)),
+        9 => (nine::part_one(data).into(), nine::part_two(data).into()),
         10 => (42, 42),
         11 => (42, 42),
         12 => (42, 42),
@@ -107,7 +108,7 @@ fn get_data(day: Option<&String>) -> (String, u16) {
 mod test {
     use super::*;
 
-    fn assert(day_str: &str, day_num: u16, part_one: i32, part_two: i32) {
+    fn assert(day_str: &str, day_num: u16, part_one: i128, part_two: i128) {
         let data = get_data(Some(&day_str.to_string()));
         let (part_one_ans, part_two_ans) = solve(day_num, data.0.as_str());
         assert_eq!(part_one, part_one_ans);
@@ -141,6 +142,18 @@ mod test {
     #[test]
     fn day_six() {
         assert("6", 6, 160816, 46561107);
+    }
+
+    #[test]
+    fn day_seven() {
+        assert("7", 7, 250058342, 250506580);
+    }
+
+    #[test]
+    #[cfg(not(debug_assertions))]
+    fn day_eight() {
+        eprintln!("Warning: Day 8 test takes very long");
+        assert("8", 8, 20093, 22103062509257);
     }
 
     #[test]

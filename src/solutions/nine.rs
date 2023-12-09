@@ -19,18 +19,6 @@ fn part_one_inner(data: &str) -> i32 {
     sum
 }
 
-fn faster_part_one(data: &str) -> i32 {
-    let mut sum = 0;
-    for line in data.lines() {
-        let nums = line
-            .split_ascii_whitespace()
-            .map(|c| c.parse::<i32>().unwrap())
-            .collect::<Vec<_>>();
-        let mut vals = vec![nums];
-    }
-    sum
-}
-
 pub fn part_two(data: &str) -> i32 {
     let now = std::time::Instant::now();
     let ans = part_two_inner(data);
