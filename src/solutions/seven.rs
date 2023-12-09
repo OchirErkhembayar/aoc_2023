@@ -1,7 +1,4 @@
-use std::{
-    cmp::Ordering,
-    collections::{BTreeMap, BinaryHeap, HashMap},
-};
+use std::collections::HashMap;
 
 pub fn part_one(data: &str) -> i32 {
     let now = std::time::Instant::now();
@@ -25,7 +22,7 @@ impl Hand {
             let entry = hand_map.entry(card).or_insert(0);
             *entry += 1;
         }
-        let mut highest = hand_map
+        let mut highest = *hand_map
             .iter()
             .reduce(|(hcard, hcount), (ccard, ccount)| {
                 if ccount > hcount {
@@ -35,8 +32,7 @@ impl Hand {
                 }
             })
             .unwrap()
-            .1
-            .clone();
+            .1;
         if highest > 3 {
             highest += 2;
         } else if highest == 3 {
@@ -45,10 +41,8 @@ impl Hand {
             } else {
                 highest += 1;
             }
-        } else if highest == 2 {
-            if hand_map.iter().filter(|(_, v)| v == &&2).count() == 2 {
-                highest += 1;
-            }
+        } else if highest == 2 && hand_map.iter().filter(|(_, v)| v == &&2).count() == 2 {
+            highest += 1;
         }
         Self {
             cards: chars,
@@ -72,7 +66,7 @@ impl PartialOrd for Hand {
         if self.strength == other.strength {
             for (mine, theirs) in self.cards.iter().zip(&other.cards) {
                 if mine != theirs {
-                    if mine.is_digit(10) {
+                    if mine.is_ascii_digit() {
                         return *mine as i32 > *theirs as i32;
                     } else {
                         match mine {
@@ -130,7 +124,7 @@ impl PartialOrd for Hand {
     }
 
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        Some(self.cmp(&other))
+        Some(self.cmp(other))
     }
 }
 
@@ -274,8 +268,7 @@ impl Cards {
             assert!(freqs_vec[i].1 >= freqs_vec[i + 1].1);
         }
         let score = Self::get_score(freqs_vec);
-        let cards = Self { cards, bid, score };
-        cards
+        Self { cards, bid, score }
     }
 
     fn stronger(&self, other: &Self) -> bool {

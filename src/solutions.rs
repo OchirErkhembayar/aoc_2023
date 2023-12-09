@@ -2,11 +2,12 @@ use std::{ffi::OsString, fs, process};
 
 mod five;
 mod four;
+mod nine;
 mod one;
+mod seven;
 mod six;
 mod three;
 mod two;
-mod seven;
 
 const DATA_DIR: &str = "./data";
 
@@ -28,8 +29,8 @@ fn solve(day: u16, data: &str) -> (i32, i32) {
         5 => (five::part_one(data), five::part_two(data)),
         6 => (six::part_one(data), six::part_two(data)),
         7 => (seven::part_one(data), seven::part_two(data)),
-        8 => (42, 42),
-        9 => (42, 42),
+        8 => (42, 42), // Computer crashed and didn't save it somehow :|
+        9 => (nine::part_one(data), nine::part_two(data)),
         10 => (42, 42),
         11 => (42, 42),
         12 => (42, 42),
@@ -140,5 +141,10 @@ mod test {
     #[test]
     fn day_six() {
         assert("6", 6, 160816, 46561107);
+    }
+
+    #[test]
+    fn day_nine() {
+        assert("9", 9, 1772145754, 867);
     }
 }
