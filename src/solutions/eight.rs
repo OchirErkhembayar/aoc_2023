@@ -77,12 +77,6 @@ struct Position {
 }
 
 impl Map {
-    fn _add_position(&mut self, element: String, left: String, right: String) {
-        let position = Position { left, right };
-
-        self.positions.insert(element, position);
-    }
-
     fn travel_part_one(&mut self) -> i128 {
         let mut steps = 0;
         while self.current != self.target {
