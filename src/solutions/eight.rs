@@ -111,7 +111,7 @@ impl Map {
             })
             .collect::<Vec<_>>();
 
-        let ending = self
+        let endings = self
             .positions
             .iter()
             .filter_map(|(current, _)| {
@@ -137,42 +137,26 @@ impl Map {
                     RIGHT => position.right.to_owned(),
                     _ => unreachable!(),
                 };
-                if ending.contains(current) {
+                if endings.contains(current) {
                     *d = steps;
                 }
-                /*
-                if current == "ZZZ" {
-                    println!("Z found: {current} steps: {}", steps);
-                } else if current == "BKZ" {
-                    println!("Z found: {current} steps: {}", steps);
-                } else if current == "KJZ" {
-                    println!("Z found: {current} steps: {}", steps);
-                } else if current == "XNZ" {
-                    println!("Z found: {current} steps: {}", steps);
-                } else if current == "XLZ" {
-                    println!("Z found: {current} steps: {}", steps);
-                } else if current == "PQZ" {
-                    println!("Z found: {current} steps: {}", steps);
-                }
-                */
             }
         }
-        let mut denoms = elements.iter().map(|(_, d)| *d).collect::<Vec<_>>();
-        let ogd = denoms.clone();
-        loop {
-            let (i, _) = denoms
-                .iter()
-                .enumerate()
-                .min_by(|(_, a), (_, b)| a.cmp(b))
-                .unwrap();
-            let lowest = denoms[i];
-            if denoms.iter().all(|&d| d == lowest) {
-                break;
-            }
-            denoms[i] += ogd[i];
-        }
-        *denoms.last().unwrap()
+        elements.iter().map(|(_, d)| *d).fold(1, lcm)
     }
+}
+
+fn lcm(x: i128, y: i128) -> i128 {
+    x * y / gcd(x, y)
+}
+
+fn gcd(mut x: i128, mut y: i128) -> i128 {
+    while y != 0 {
+        let tmp = x;
+        x = y;
+        y = tmp % y;
+    }
+    x
 }
 
 pub fn part_two(data: &str) -> i128 {

@@ -150,9 +150,7 @@ mod test {
     }
 
     #[test]
-    #[cfg(not(debug_assertions))]
     fn day_eight() {
-        eprintln!("Warning: Day 8 test takes very long");
         assert("8", 8, 20093, 22103062509257);
     }
 
