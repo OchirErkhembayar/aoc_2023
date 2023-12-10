@@ -7,6 +7,7 @@ mod nine;
 mod one;
 mod seven;
 mod six;
+mod ten;
 mod three;
 mod two;
 
@@ -32,7 +33,7 @@ fn solve(day: u16, data: &str) -> (i128, i128) {
         7 => (seven::part_one(data).into(), seven::part_two(data).into()),
         8 => (eight::part_one(data), eight::part_two(data)),
         9 => (nine::part_one(data).into(), nine::part_two(data).into()),
-        10 => (42, 42),
+        10 => (ten::part_one(data), ten::part_two(data)),
         11 => (42, 42),
         12 => (42, 42),
         13 => (42, 42),
