@@ -10,29 +10,20 @@ fn part_one_inner(data: &str) -> i32 {
     if true {
         return 0;
     }
-    let mut allpipes = vec![];
-    for (y, line) in data.lines().enumerate() {
-        let mut pipes = line
-            .chars()
-            .enumerate()
-            .filter_map(|(x, c)| {
+    let allpipes = data
+        .lines()
+        .enumerate()
+        .fold(vec![], |mut pipes, (y, line)| {
+            line.chars().enumerate().for_each(|(x, c)| {
                 if c != '.' {
-                    Some(Pipe::new(x, y, c))
-                } else {
-                    None
+                    pipes.push(Pipe::new(x, y, c));
                 }
-            })
-            .collect::<Vec<_>>();
-        if !pipes.is_empty() {
-            allpipes.append(&mut pipes);
-        }
-    }
+            });
+            pipes
+        });
     let mut maze = Maze::new(allpipes);
     maze.traverse();
-    let moves = maze.moves;
-    let history = maze.history;
-    println!("History: {}", history.len());
-    ((moves + 1) / 2) as i32
+    (maze.history.len() / 2) as i32
 }
 
 pub fn part_two(data: &str) -> i128 {
@@ -45,30 +36,36 @@ pub fn part_two(data: &str) -> i128 {
 
 fn part_two_inner(data: &str) -> i32 {
     let mut pipes = vec![];
-    let mut dots = vec![];
+    let mut tiles = vec![];
     for (y, line) in data.lines().enumerate() {
         line.chars().enumerate().for_each(|(x, c)| {
-            if c == '.' {
-                dots.push((x, y));
-            } else {
+            tiles.push((x, y));
+            if c != '.' {
                 pipes.push(Pipe::new(x, y, c));
             }
         });
     }
-    let closed = dots
-        .iter()
-        .filter(|&&coords| encloses(coords, &pipes))
+    let mut maze = Maze::new(pipes);
+    maze.traverse();
+    let loop_pipes = maze.history;
+    let tiles = tiles
+        .into_iter()
+        .filter(|&coords| !loop_pipes.iter().any(|p| p.position == coords))
         .collect::<Vec<_>>();
-    println!("Closed len: {}", closed.len());
-    let not_closed = dots
+    let closed = tiles
         .iter()
-        .filter(|&&coords| encloses(coords, &pipes))
+        .filter(|&&coords| !encloses(coords, &loop_pipes))
+        .collect::<Vec<_>>();
+    let not_closed = tiles
+        .iter()
+        .filter(|&&coords| !encloses(coords, &loop_pipes))
         .collect::<Vec<_>>();
 
-    closed.iter().fold(0, |acc, &&coords| {
-        if touches(coords, &not_closed) {
+    closed.iter().fold(0, |acc, &coords| {
+        if touches(*coords, &not_closed) {
             acc
         } else {
+            println!("{:?}", coords);
             acc + 1
         }
     }) as i32
@@ -114,7 +111,7 @@ fn encloses(coords: (usize, usize), pipes: &Vec<Pipe>) -> bool {
         println!("South found: {south_y}");
         println!("West : {west_x}");
         println!("Matching");
-        */
+        // */
     }
     ans
 }
