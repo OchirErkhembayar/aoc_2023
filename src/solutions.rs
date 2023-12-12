@@ -1,6 +1,7 @@
 use std::{ffi::OsString, fs, process};
 
 mod eight;
+mod eleven;
 mod five;
 mod four;
 mod nine;
@@ -34,7 +35,7 @@ fn solve(day: u16, data: &str) -> (i128, i128) {
         8 => (eight::part_one(data), eight::part_two(data)),
         9 => (nine::part_one(data).into(), nine::part_two(data).into()),
         10 => (ten::part_one(data), ten::part_two(data)),
-        11 => (42, 42),
+        11 => (eleven::part_one(data), eleven::part_two(data)),
         12 => (42, 42),
         13 => (42, 42),
         14 => (42, 42),
@@ -133,10 +134,6 @@ mod test {
 
     #[test]
     fn day_four() {
-        let data = get_data(Some(&"4".to_string()));
-        let (part_one, part_two) = solve(4, data.0.as_str());
-        assert_eq!(23441, part_one);
-        assert_eq!(5923918, part_two);
         assert("4", 4, 23441, 5923918);
     }
 
@@ -158,5 +155,10 @@ mod test {
     #[test]
     fn day_nine() {
         assert("9", 9, 1772145754, 867);
+    }
+
+    #[test]
+    fn day_ten() {
+        assert("10", 10, 6806, 449);
     }
 }

@@ -7,9 +7,6 @@ pub fn part_one(data: &str) -> i128 {
 }
 
 fn part_one_inner(data: &str) -> i32 {
-    if true {
-        return 0;
-    }
     let allpipes = data
         .lines()
         .enumerate()
@@ -36,10 +33,8 @@ pub fn part_two(data: &str) -> i128 {
 
 fn part_two_inner(data: &str) -> i32 {
     let mut pipes = vec![];
-    let mut tiles = vec![];
     for (y, line) in data.lines().enumerate() {
         line.chars().enumerate().for_each(|(x, c)| {
-            tiles.push((x, y));
             if c != '.' {
                 pipes.push(Pipe::new(x, y, c));
             }
@@ -47,73 +42,17 @@ fn part_two_inner(data: &str) -> i32 {
     }
     let mut maze = Maze::new(pipes);
     maze.traverse();
-    let loop_pipes = maze.history;
-    let tiles = tiles
-        .into_iter()
-        .filter(|&coords| !loop_pipes.iter().any(|p| p.position == coords))
-        .collect::<Vec<_>>();
-    let closed = tiles
-        .iter()
-        .filter(|&&coords| !encloses(coords, &loop_pipes))
-        .collect::<Vec<_>>();
-    let not_closed = tiles
-        .iter()
-        .filter(|&&coords| !encloses(coords, &loop_pipes))
-        .collect::<Vec<_>>();
-
-    closed.iter().fold(0, |acc, &coords| {
-        if touches(*coords, &not_closed) {
-            acc
-        } else {
-            println!("{:?}", coords);
-            acc + 1
-        }
-    }) as i32
-}
-
-fn touches(coords: (usize, usize), dots: &Vec<&(usize, usize)>) -> bool {
-    let (x, y) = coords;
-    dots.iter()
-        .filter(|d| {
-            let (dx, dy) = d;
-            ((*dx).abs_diff(x) == 1 && *dy == y) || ((*dy).abs_diff(y) == 1 && *dx == x)
-        })
-        .count()
-        > 0
-}
-
-fn encloses(coords: (usize, usize), pipes: &Vec<Pipe>) -> bool {
-    let (x, y) = coords;
-    // find a coords with matching y and x smaller and larger (not hori)
-    // and also matching x and y larger and smaller (not vert)
-    // Also cannot be touching a coord that can escape
-    let x_matches = pipes
-        .iter()
-        .filter(|p| p.position.1 == y && p.shape == Shape::Vert)
-        .collect::<Vec<_>>();
-    let y_matches = pipes
-        .iter()
-        .filter(|p| p.position.0 == x && p.shape == Shape::Hori)
-        .collect::<Vec<_>>();
-    let north_y = y_matches.iter().find(|p| p.position.1 < y).is_some();
-    let east_x = x_matches.iter().find(|p| p.position.0 > x).is_some();
-    let south_y = y_matches.iter().find(|p| p.position.1 > y).is_some();
-    let west_x = x_matches.iter().find(|p| p.position.0 < x).is_some();
-    if [(2, 6), (3, 6), (7, 6), (8, 6)].contains(&coords) {}
-    let ans = south_y && north_y && east_x && west_x;
-    if ans {
-        /*
-        println!("Coord: {:?}", coords);
-        println!("X matches: {:?}", x_matches);
-        println!("Y matches: {:?}", y_matches);
-        println!("North found: {north_y}");
-        println!("East found: {east_x}");
-        println!("South found: {south_y}");
-        println!("West : {west_x}");
-        println!("Matching");
-        // */
-    }
-    ans
+    let loop_pipes = maze.history.iter().map(|p| p.position).collect::<Vec<_>>();
+    let mut area = loop_pipes.windows(2).fold(0, |acc, positions| {
+        let (x1, y1) = positions[0];
+        let (x2, y2) = positions[1];
+        acc + (x1 as i32 * y2 as i32) - (y1 as i32 * x2 as i32)
+    });
+    let (fx, fy) = loop_pipes.first().unwrap();
+    let (lx, ly) = loop_pipes.last().unwrap();
+    area += (*lx as i32) * (*fy as i32) - (*ly as i32) * (*fx as i32);
+    area /= 2;
+    area - (loop_pipes.len() as i32) / 2 + 1
 }
 
 #[derive(Debug, PartialEq, Clone)]
@@ -160,19 +99,26 @@ impl Maze {
     fn traverse(&mut self) -> usize {
         self.travel();
         while self.travel() {}
-        println!("Moves: {}", self.moves);
         (self.moves + 1) / 2
     }
 
     fn travel(&mut self) -> bool {
         let next_pipe = self.pipes.iter().enumerate().find(|(_, p)| {
-            let (x, y) = p.position;
             match self.current.shape {
                 Shape::Start => {
-                    // Anything that is touching
-                    let position = self.current.position;
-                    (position.0.abs_diff(x) == 0 && position.1.abs_diff(y) == 1)
-                        || (position.1.abs_diff(y) == 0 && position.0.abs_diff(x) == 1)
+                    let (x, y) = self.current.position;
+                    assert!(p.shape != Shape::Start);
+                    let (nx, ny) = p.position;
+                    if nx == x && y > 0 && y - 1 == ny {
+                        return matches!(p.shape, Shape::SE | Shape::Vert | Shape::SW);
+                    } else if nx == x && y + 1 == ny {
+                        return matches!(p.shape, Shape::NE | Shape::Vert | Shape::NW);
+                    } else if ny == y && x + 1 == nx {
+                        return matches!(p.shape, Shape::NW | Shape::SW | Shape::Hori);
+                    } else if ny == y && x > 0 && x - 1 == nx {
+                        return matches!(p.shape, Shape::NE | Shape::SE | Shape::Hori);
+                    }
+                    false
                 }
                 Shape::Vert => {
                     // Top or down
@@ -250,10 +196,10 @@ impl Maze {
                                 p.shape,
                                 Shape::Vert | Shape::NW | Shape::NE | Shape::Start
                             ),
-                            Direction::East => match p.shape {
-                                Shape::Hori | Shape::SW | Shape::NW | Shape::Start => true,
-                                _ => false,
-                            },
+                            Direction::East => matches!(
+                                p.shape,
+                                Shape::Hori | Shape::SW | Shape::NW | Shape::Start
+                            ),
                             _ => false,
                         }
                     } else {
@@ -291,7 +237,7 @@ impl Maze {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 struct Pipe {
     shape: Shape,
     position: (usize, usize),
@@ -318,11 +264,7 @@ impl Pipe {
     fn direction(&self, other: &Self) -> Option<Direction> {
         let x_d = other.position.0 as i32 - self.position.0 as i32;
         let y_d = other.position.1 as i32 - self.position.1 as i32;
-        if x_d.abs() > 1 {
-            return None;
-        }
-        // other on top == -1 == north
-        if y_d.abs() > 1 {
+        if x_d.abs() > 1 || y_d.abs() > 1 {
             return None;
         }
         match x_d {
