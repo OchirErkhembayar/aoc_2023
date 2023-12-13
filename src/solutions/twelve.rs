@@ -50,12 +50,106 @@ impl Group {
     }
 
     // See how many different ways we can split this group up
-    fn calculate(&self, grouping: i32) -> i32 {
-        let len = self.springs.len() as i32;
-        if len == grouping {
-            return 1;
+    // Find the combinations we can get if every spring was ?
+    // Then filter those to the ones where the # exists in their position
+    fn calculate(&self, groupings: Vec<i32>) -> i32 {
+        let groupings_len = groupings.len() as i32;
+        let springs_len = self.springs.len() as i32;
+        if groupings_len == 1 && springs_len == groupings[0] {
+            return groupings[0];
         }
+        // ???#? 3
+        // required pos == 4
+        // 4 - 3 combinations don't wory
+        //
+        // ??#??? 3
+        // required pos == 3
+        // (len - 3) - 3 + 1 don't work
+        //
+        // ???#??????? 3 (len == 11)
+        // required pos == 4
+        // 4 - 3 from front don't work
+        // (len - 4) - 3 + 1 don't work from back (5)
+        //
+        // ??#? 3
+        // 3 - 3 don't work from front ( <= 0 so all work)
+        // (len - 3) - 3 + 1 ( <= 0 so all work)
+        //
+        // ??#?# 3 Only 1...
+        //
+        // Find highest index we can start from
+        // Create vector of possible ranges
+        // Filter them to the ranges which have the required indexes
+        //
+        // Then look at multiple groupings
+        // ?????? 1, 2
+        // #.##??
+        // #..##?
+        // #...##
+        // .#.##.
+        // .#..##
+        // ..#.##
+        //
+        // Put the first grouping in position 1
+        // Find possible combinations for the second one
+        // Move up once, repeat until 1 can't move up anymore
+        //
+        // ???????? 1, 2, 1
+        // #.##.#..
+        // #.##..#.
+        // #.##...#
+        // #..##.#.
+        // #..##..#
+        // #...##.#
+        // .#.##.#.
+        // .#..##.#
+        // ..#.##.#
+        //
+        // There is a minimum range that they will take
+        // Put the first one at the start of the range and calc then shift up once
+        //
+        let required_indexes = self
+            .springs
+            .iter()
+            .enumerate()
+            .filter_map(|(i, s)| if *s == Spring::Damaged { Some(i) } else { None })
+            .collect::<Vec<_>>();
+
+        let min_width = groupings.iter().fold(0, |acc, d| acc + d) + groupings_len - 1;
+
+        // indexes of damaged springs
+        let mut iterations: Vec<Vec<i32>> = vec![];
+
+        let mut start_index = 0;
+        while start_index + min_width <= springs_len {
+            start_index += 1;
+        }
+
         42
+    }
+
+    fn generate_combinations(
+        &self,
+        num_groups: i32,
+        group_lens: &[i32],
+        mut current_combination: Vec<Spring>,
+    ) -> Vec<Vec<Spring>> {
+        if num_groups == 0 {
+            return vec![current_combination];
+        }
+
+        let mut combinations = vec![];
+        // ????? 2, 2
+        // 5 - 4 - (2 - 1) + 1 = 1
+        for i in
+            0..(self.springs.len() as i32 - group_lens.iter().sum::<i32>() - (num_groups - 1) + 1)
+        {
+            // Unless we're the first one we want to push onto it
+            for idx in 0..=i {
+                current_combination.push(Spring::Operational);
+            }
+        }
+        combinations
     }
 }
 
