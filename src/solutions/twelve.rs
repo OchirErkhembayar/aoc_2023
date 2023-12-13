@@ -128,6 +128,45 @@ impl Group {
         42
     }
 
+    /*
+     * ??????? 1, 2, 1
+     * len = 7
+     * num_groups = 3
+     * groupings = [1, 2, 1]
+     */
+    fn get_combinations(
+        &self,
+        length: usize,
+        groupings: &[usize],
+        current_combination: &mut Vec<Spring>,
+        all_combinations: &mut Vec<Vec<Spring>>,
+    ) {
+        if groupings.is_empty() {
+            while current_combination.len() < self.springs.len() {
+                current_combination.push(Spring::Operational);
+            }
+            all_combinations.push(current_combination.clone());
+            current_combination.clear();
+            return;
+        }
+
+        let num_groups = groupings.len();
+        let min_width: usize = groupings.iter().sum::<usize>() + num_groups - 1;
+
+        for i in 0..=(length - min_width) {
+            current_combination.append(&mut vec![Spring::Operational; i]);
+            current_combination.append(&mut vec![Spring::Damaged; groupings[0]]);
+            current_combination.push(Spring::Operational);
+            // This should clone and add a grouping to all combinations
+            self.get_combinations(
+                length - groupings[0] - i,
+                &groupings[1..],
+                current_combination,
+                all_combinations,
+            );
+        }
+    }
+
     fn generate_combinations(
         &self,
         num_groups: i32,
@@ -138,14 +177,14 @@ impl Group {
             return vec![current_combination];
         }
 
-        let mut combinations = vec![];
+        let combinations = vec![];
         // ????? 2, 2
         // 5 - 4 - (2 - 1) + 1 = 1
         for i in
             0..(self.springs.len() as i32 - group_lens.iter().sum::<i32>() - (num_groups - 1) + 1)
         {
             // Unless we're the first one we want to push onto it
-            for idx in 0..=i {
+            for _idx in 0..=i {
                 current_combination.push(Spring::Operational);
             }
         }
@@ -194,5 +233,25 @@ impl From<&str> for Row {
             .map(|n| n.parse::<i32>().unwrap())
             .collect::<Vec<_>>();
         Self { groups, group_nums }
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn test_calc_groups() {
+        let group = Group {
+            springs: vec![
+                Spring::Unknown,
+            ],
+        };
+
+        let mut current_combination = vec![];
+        let mut all_combinations = vec![];
+
+        group.get_combinations(4, &[1], &mut current_combination, &mut all_combinations);
+        assert_eq!(all_combinations, vec![vec![Spring::Damaged]]);
     }
 }
