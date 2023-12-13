@@ -11,6 +11,7 @@ mod six;
 mod ten;
 mod three;
 mod two;
+mod twelve;
 
 const DATA_DIR: &str = "./data";
 
@@ -36,7 +37,7 @@ fn solve(day: u16, data: &str) -> (i128, i128) {
         9 => (nine::part_one(data).into(), nine::part_two(data).into()),
         10 => (ten::part_one(data), ten::part_two(data)),
         11 => (eleven::part_one(data), eleven::part_two(data)),
-        12 => (42, 42),
+        12 => (twelve::part_one(data), twelve::part_two(data)),
         13 => (42, 42),
         14 => (42, 42),
         15 => (42, 42),
@@ -160,5 +161,10 @@ mod test {
     #[test]
     fn day_ten() {
         assert("10", 10, 6806, 449);
+    }
+
+    #[test]
+    fn day_eleven() {
+        assert("11", 11, 9565386, 857986849428);
     }
 }
