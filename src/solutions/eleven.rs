@@ -15,7 +15,7 @@ pub fn part_two(data: &str) -> i128 {
     let ans = part_two_inner(data);
     let elapsed = now.elapsed();
     println!("Day 11 part 2: {}", elapsed.as_nanos());
-    ans as i128
+    ans
 }
 
 fn part_two_inner(data: &str) -> i128 {

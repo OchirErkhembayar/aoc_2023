@@ -1,198 +1,124 @@
-use std::char;
+use std::{
+    char,
+    sync::{Arc, Mutex},
+};
 
 pub fn part_one(data: &str) -> i128 {
     let now = std::time::Instant::now();
     let ans = part_one_inner(data);
     let elapsed = now.elapsed();
     println!("Day 12 part 1: {}", elapsed.as_micros());
+    println!("Part 1 ans: {ans}");
     ans as i128
 }
 
 fn part_one_inner(data: &str) -> i32 {
-    data.lines().map(|line| Row::from(line).calculate()).sum()
+    data.lines().map(|l| Row::from(l).calculate()).sum()
 }
 
 pub fn part_two(data: &str) -> i128 {
     let now = std::time::Instant::now();
     let ans = part_two_inner(data);
     let elapsed = now.elapsed();
-    println!("Day 12 part 1: {}", elapsed.as_micros());
-    ans as i128
+    println!("Day 12 part 2: {}", elapsed.as_micros());
+    ans
 }
 
-fn part_two_inner(data: &str) -> i32 {
-    42
+fn part_two_inner(data: &str) -> i128 {
+    let rows = data.lines().map(Row::unfolded).collect::<Vec<_>>();
+    println!("Rows: {:?}", rows);
+
+    let mut handles = vec![];
+    let sum = Arc::new(Mutex::new(0));
+    for row in rows {
+        let sum = Arc::clone(&sum);
+        handles.push(std::thread::spawn(move || {
+            let comb = row.calculate();
+            let mut s = sum.lock().unwrap();
+            *s += comb as i128;
+            drop(s);
+        }));
+    }
+    for handle in handles {
+        handle.join().unwrap();
+        println!("Joined handle");
+    }
+    let s = sum.lock().unwrap();
+    *s
 }
 
 #[derive(Debug, Clone, PartialEq, Default)]
 struct Row {
     groups: Vec<Group>,
-    group_nums: Vec<i32>,
+    group_nums: Vec<usize>,
 }
 
 #[derive(Debug, Clone, PartialEq, Default)]
 struct Group {
     springs: Vec<Spring>,
+    required_indexes: Vec<(usize, Spring)>,
 }
 
 impl Group {
-    fn max_damages(&self) -> i32 {
-        let length = self.springs.len() as i32;
-        if length % 2 == 0 {
-            if length == 1 {
-                1
-            } else {
-                length / 2
-            }
-        } else {
-            (length + 1) / 2
-        }
+    fn calculate(&self, groupings: &[usize]) -> i32 {
+        let mut combinations = 0;
+        self.get_combinations(groupings, vec![], &mut combinations);
+        println!("Calculated: {combinations} Springs: {:?}", self.springs);
+        combinations
+        // let ans = combinations.into_iter().fold(0, |acc, c| {
+        //     if required_indexes.iter().all(|(i, kind)| c[*i] == *kind) {
+        //         acc + 1
+        //     } else {
+        //         acc
+        //     }
+        // });
+        // println!("Got combos: {ans}");
     }
 
-    // See how many different ways we can split this group up
-    // Find the combinations we can get if every spring was ?
-    // Then filter those to the ones where the # exists in their position
-    fn calculate(&self, groupings: Vec<i32>) -> i32 {
-        let groupings_len = groupings.len() as i32;
-        let springs_len = self.springs.len() as i32;
-        if groupings_len == 1 && springs_len == groupings[0] {
-            return groupings[0];
-        }
-        // ???#? 3
-        // required pos == 4
-        // 4 - 3 combinations don't wory
-        //
-        // ??#??? 3
-        // required pos == 3
-        // (len - 3) - 3 + 1 don't work
-        //
-        // ???#??????? 3 (len == 11)
-        // required pos == 4
-        // 4 - 3 from front don't work
-        // (len - 4) - 3 + 1 don't work from back (5)
-        //
-        // ??#? 3
-        // 3 - 3 don't work from front ( <= 0 so all work)
-        // (len - 3) - 3 + 1 ( <= 0 so all work)
-        //
-        // ??#?# 3 Only 1...
-        //
-        // Find highest index we can start from
-        // Create vector of possible ranges
-        // Filter them to the ranges which have the required indexes
-        //
-        // Then look at multiple groupings
-        // ?????? 1, 2
-        // #.##??
-        // #..##?
-        // #...##
-        // .#.##.
-        // .#..##
-        // ..#.##
-        //
-        // Put the first grouping in position 1
-        // Find possible combinations for the second one
-        // Move up once, repeat until 1 can't move up anymore
-        //
-        // ???????? 1, 2, 1
-        // #.##.#..
-        // #.##..#.
-        // #.##...#
-        // #..##.#.
-        // #..##..#
-        // #...##.#
-        // .#.##.#.
-        // .#..##.#
-        // ..#.##.#
-        //
-        // There is a minimum range that they will take
-        // Put the first one at the start of the range and calc then shift up once
-        //
-        let required_indexes = self
-            .springs
-            .iter()
-            .enumerate()
-            .filter_map(|(i, s)| if *s == Spring::Damaged { Some(i) } else { None })
-            .collect::<Vec<_>>();
-
-        let min_width = groupings.iter().fold(0, |acc, d| acc + d) + groupings_len - 1;
-
-        // indexes of damaged springs
-        let mut iterations: Vec<Vec<i32>> = vec![];
-
-        let mut start_index = 0;
-        while start_index + min_width <= springs_len {
-            start_index += 1;
-        }
-
-        42
-    }
-
-    /*
-     * ??????? 1, 2, 1
-     * len = 7
-     * num_groups = 3
-     * groupings = [1, 2, 1]
-     */
     fn get_combinations(
         &self,
-        length: usize,
         groupings: &[usize],
-        current_combination: &mut Vec<Spring>,
-        all_combinations: &mut Vec<Vec<Spring>>,
+        mut current_combination: Vec<Spring>,
+        combos: &mut i32,
     ) {
+        let length = self.springs.len();
         if groupings.is_empty() {
-            while current_combination.len() < self.springs.len() {
+            while current_combination.len() < length {
                 current_combination.push(Spring::Operational);
             }
-            all_combinations.push(current_combination.clone());
-            current_combination.clear();
+            if self
+                .required_indexes
+                .iter()
+                .all(|(i, kind)| current_combination[*i] == *kind)
+            {
+                *combos += 1;
+            }
             return;
         }
 
-        let num_groups = groupings.len();
-        let min_width: usize = groupings.iter().sum::<usize>() + num_groups - 1;
+        let min_width: usize = groupings.iter().sum::<usize>() + groupings.len() - 1;
+        // eprintln!(
+        //     "min_width: {min_width}, len: {}, current: {} groupings: {:?} springs: {:?}",
+        //     length,
+        //     current_combination.len(),
+        //     groupings,
+        //     self.springs,
+        // );
+        let max_len = length - current_combination.len() - min_width;
 
-        for i in 0..=(length - min_width) {
-            current_combination.append(&mut vec![Spring::Operational; i]);
-            current_combination.append(&mut vec![Spring::Damaged; groupings[0]]);
-            current_combination.push(Spring::Operational);
-            // This should clone and add a grouping to all combinations
-            self.get_combinations(
-                length - groupings[0] - i,
-                &groupings[1..],
-                current_combination,
-                all_combinations,
-            );
-        }
-    }
-
-    fn generate_combinations(
-        &self,
-        num_groups: i32,
-        group_lens: &[i32],
-        mut current_combination: Vec<Spring>,
-    ) -> Vec<Vec<Spring>> {
-        if num_groups == 0 {
-            return vec![current_combination];
-        }
-
-        let combinations = vec![];
-        // ????? 2, 2
-        // 5 - 4 - (2 - 1) + 1 = 1
-        for i in
-            0..(self.springs.len() as i32 - group_lens.iter().sum::<i32>() - (num_groups - 1) + 1)
-        {
-            // Unless we're the first one we want to push onto it
-            for _idx in 0..=i {
-                current_combination.push(Spring::Operational);
+        for i in 0..=max_len {
+            let mut temp_comb = current_combination.clone();
+            temp_comb.append(&mut vec![Spring::Operational; i]);
+            temp_comb.append(&mut vec![Spring::Damaged; groupings[0]]);
+            if temp_comb.len() < length {
+                temp_comb.push(Spring::Operational);
             }
+            self.get_combinations(&groupings[1..], temp_comb, combos);
         }
-        combinations
     }
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Copy)]
 enum Spring {
     Unknown,
     Damaged,
@@ -211,10 +137,67 @@ impl From<char> for Spring {
 }
 
 impl Row {
-    fn calculate(&self) -> i32 {
-        // Check the amount of chains the group can fit.
+    fn calculate(self) -> i32 {
+        self.groups[0].calculate(self.group_nums.as_slice())
+    }
 
-        42
+    fn merge_groups(&mut self) {
+        let springs: Vec<Spring> = self.groups.iter().fold(vec![], |mut acc, g| {
+            let mut springs = g.springs.clone();
+            if !acc.is_empty() {
+                springs.insert(0, Spring::Operational);
+            }
+            acc.append(&mut springs);
+            acc
+        });
+        let required_indexes = springs.iter().enumerate().fold(vec![], |mut acc, (i, s)| {
+            if *s != Spring::Unknown {
+                acc.push((i, *s));
+            }
+            acc
+        });
+        let group = Group {
+            springs,
+            required_indexes,
+        };
+        self.groups = Vec::from([group]);
+    }
+
+    fn unfolded(s: &str) -> Self {
+        let (springs, group_nums) = s.split_once(' ').unwrap();
+        let groups = (0..5)
+            .fold(String::new(), |mut acc, _| {
+                if !acc.is_empty() {
+                    acc.push('?');
+                }
+                acc.push_str(springs);
+                acc
+            })
+            .split('.')
+            .filter(|s| !s.is_empty())
+            .map(|s| {
+                let springs = s.chars().map(Spring::from).collect::<Vec<_>>();
+                let required_indexes =
+                    springs.iter().enumerate().fold(vec![], |mut acc, (i, s)| {
+                        if *s != Spring::Unknown {
+                            acc.push((i, *s));
+                        }
+                        acc
+                    });
+                Group {
+                    springs,
+                    required_indexes,
+                }
+            })
+            .collect::<Vec<_>>();
+        let group_nums = group_nums
+            .split(',')
+            .map(|n| n.parse::<usize>().unwrap())
+            .collect::<Vec<_>>()
+            .repeat(5);
+        let mut row = Self { groups, group_nums };
+        row.merge_groups();
+        row
     }
 }
 
@@ -224,15 +207,28 @@ impl From<&str> for Row {
         let groups = springs
             .split('.')
             .filter(|s| !s.is_empty())
-            .map(|s| Group {
-                springs: s.chars().map(|c| Spring::from(c)).collect::<Vec<_>>(),
+            .map(|s| {
+                let springs = s.chars().map(Spring::from).collect::<Vec<_>>();
+                let required_indexes =
+                    springs.iter().enumerate().fold(vec![], |mut acc, (i, s)| {
+                        if *s != Spring::Unknown {
+                            acc.push((i, *s));
+                        }
+                        acc
+                    });
+                Group {
+                    springs,
+                    required_indexes,
+                }
             })
             .collect::<Vec<_>>();
         let group_nums = group_nums
             .split(',')
-            .map(|n| n.parse::<i32>().unwrap())
+            .map(|n| n.parse::<usize>().unwrap())
             .collect::<Vec<_>>();
-        Self { groups, group_nums }
+        let mut row = Self { groups, group_nums };
+        row.merge_groups();
+        row
     }
 }
 
@@ -240,18 +236,130 @@ impl From<&str> for Row {
 mod test {
     use super::*;
 
+    fn create_group_unknowns(length: usize) -> Group {
+        Group {
+            springs: vec![Spring::Unknown; length],
+            required_indexes: vec![],
+        }
+    }
+
     #[test]
-    fn test_calc_groups() {
+    fn test_singleton() {
+        let current_combination = vec![];
+        let mut all_combinations = 0;
+        create_group_unknowns(1).get_combinations(&[1], current_combination, &mut all_combinations);
+        assert_eq!(all_combinations, 1);
+    }
+
+    #[test]
+    fn test_two() {
+        {
+            let current_combination = vec![];
+            let mut all_combinations = 0;
+            create_group_unknowns(2).get_combinations(
+                &[1],
+                current_combination,
+                &mut all_combinations,
+            );
+            assert_eq!(all_combinations, 2);
+        }
+    }
+
+    #[test]
+    fn test_three() {
+        let current_combination = vec![];
+        let mut all_combinations = 0;
+        create_group_unknowns(3).get_combinations(
+            &[1, 1],
+            current_combination,
+            &mut all_combinations,
+        );
+        assert_eq!(all_combinations, 1);
+    }
+
+    #[test]
+    fn test_three_one() {
+        let current_combination = vec![];
+        let mut all_combinations = 0;
+        create_group_unknowns(3).get_combinations(&[1], current_combination, &mut all_combinations);
+        assert_eq!(all_combinations, 3,);
+    }
+
+    #[test]
+    fn test_four() {
+        let current_combination = vec![];
+        let mut all_combinations = 0;
+        create_group_unknowns(4).get_combinations(&[2], current_combination, &mut all_combinations);
+        assert_eq!(all_combinations, 3);
+    }
+
+    #[test]
+    fn test_four_two() {
+        let current_combination = vec![];
+        let mut all_combinations = 0;
+        create_group_unknowns(4).get_combinations(
+            &[1, 1],
+            current_combination,
+            &mut all_combinations,
+        );
+        assert_eq!(all_combinations, 3);
+    }
+
+    #[test]
+    fn test_five() {
+        let current_combination = vec![];
+        let mut all_combinations = 0;
+        create_group_unknowns(5).get_combinations(
+            &[1, 2],
+            current_combination,
+            &mut all_combinations,
+        );
+        assert_eq!(all_combinations, 3,);
+    }
+
+    #[test]
+    fn test_six() {
+        let current_combination = vec![];
+        let mut all_combinations = 0;
+        create_group_unknowns(7).get_combinations(
+            &[1, 3],
+            current_combination,
+            &mut all_combinations,
+        );
+        assert_eq!(all_combinations, 6,);
+    }
+
+    #[test]
+    fn test_calc() {
+        let group = Group {
+            springs: vec![Spring::Damaged, Spring::Unknown, Spring::Unknown],
+            required_indexes: vec![(0, Spring::Damaged)],
+        };
+
+        assert_eq!(1, group.calculate(&[1]));
+
+        let group = Group {
+            springs: vec![
+                Spring::Damaged,
+                Spring::Unknown,
+                Spring::Unknown,
+                Spring::Damaged,
+            ],
+            required_indexes: vec![(0, Spring::Damaged), (3, Spring::Damaged)],
+        };
+
+        assert_eq!(1, group.calculate(&[1, 1]));
+
         let group = Group {
             springs: vec![
                 Spring::Unknown,
+                Spring::Unknown,
+                Spring::Unknown,
+                Spring::Damaged,
             ],
+            required_indexes: vec![(3, Spring::Damaged)],
         };
 
-        let mut current_combination = vec![];
-        let mut all_combinations = vec![];
-
-        group.get_combinations(4, &[1], &mut current_combination, &mut all_combinations);
-        assert_eq!(all_combinations, vec![vec![Spring::Damaged]]);
+        assert_eq!(2, group.calculate(&[1, 1]));
     }
 }
