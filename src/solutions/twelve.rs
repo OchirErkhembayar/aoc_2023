@@ -63,16 +63,8 @@ impl Group {
     fn calculate(&self, groupings: &[usize]) -> i32 {
         let mut combinations = 0;
         self.get_combinations(groupings, vec![], &mut combinations);
-        println!("Calculated: {combinations} Springs: {:?}", self.springs);
+        println!("Calced: {combinations}");
         combinations
-        // let ans = combinations.into_iter().fold(0, |acc, c| {
-        //     if required_indexes.iter().all(|(i, kind)| c[*i] == *kind) {
-        //         acc + 1
-        //     } else {
-        //         acc
-        //     }
-        // });
-        // println!("Got combos: {ans}");
     }
 
     fn get_combinations(
@@ -82,6 +74,13 @@ impl Group {
         combos: &mut i32,
     ) {
         let length = self.springs.len();
+        if self
+            .required_indexes
+            .iter()
+            .any(|(i, kind)| current_combination.get(*i).is_some_and(|s| *s != *kind))
+        {
+            return;
+        }
         if groupings.is_empty() {
             while current_combination.len() < length {
                 current_combination.push(Spring::Operational);
@@ -97,13 +96,6 @@ impl Group {
         }
 
         let min_width: usize = groupings.iter().sum::<usize>() + groupings.len() - 1;
-        // eprintln!(
-        //     "min_width: {min_width}, len: {}, current: {} groupings: {:?} springs: {:?}",
-        //     length,
-        //     current_combination.len(),
-        //     groupings,
-        //     self.springs,
-        // );
         let max_len = length - current_combination.len() - min_width;
 
         for i in 0..=max_len {
@@ -112,6 +104,13 @@ impl Group {
             temp_comb.append(&mut vec![Spring::Damaged; groupings[0]]);
             if temp_comb.len() < length {
                 temp_comb.push(Spring::Operational);
+            }
+            if self
+                .required_indexes
+                .iter()
+                .any(|(i, kind)| current_combination.get(*i).is_some_and(|s| *s != *kind))
+            {
+                continue;
             }
             self.get_combinations(&groupings[1..], temp_comb, combos);
         }
@@ -195,6 +194,7 @@ impl Row {
             .map(|n| n.parse::<usize>().unwrap())
             .collect::<Vec<_>>()
             .repeat(5);
+
         let mut row = Self { groups, group_nums };
         row.merge_groups();
         row
