@@ -20,7 +20,7 @@ pub fn part_two(data: &str) -> i128 {
     let now = std::time::Instant::now();
     let ans = part_two_inner(data);
     let elapsed = now.elapsed();
-    println!("Day 12 part 2: {}", elapsed.as_micros());
+    println!("Day 12 part 2: {}", elapsed.as_secs_f64());
     ans
 }
 
@@ -28,23 +28,22 @@ fn part_two_inner(data: &str) -> i128 {
     let rows = data.lines().map(Row::unfolded).collect::<Vec<_>>();
     println!("Rows: {:?}", rows);
 
-    let mut handles = vec![];
-    let sum = Arc::new(Mutex::new(0));
-    for row in rows {
-        let sum = Arc::clone(&sum);
-        handles.push(std::thread::spawn(move || {
-            let comb = row.calculate();
-            let mut s = sum.lock().unwrap();
-            *s += comb as i128;
-            drop(s);
-        }));
-    }
-    for handle in handles {
-        handle.join().unwrap();
-        println!("Joined handle");
-    }
+    let sum = Arc::new(Mutex::new((0, 1)));
+    std::thread::scope(|s| {
+        for row in rows {
+            let sum = Arc::clone(&sum);
+            s.spawn(move || {
+                let comb = row.calculate();
+                let mut s = sum.lock().unwrap();
+                (*s).0 += comb as i128;
+                (*s).1 += 1;
+                println!("s: {}", (*s).1);
+                drop(s);
+            });
+        }
+    });
     let s = sum.lock().unwrap();
-    *s
+    (*s).0
 }
 
 #[derive(Debug, Clone, PartialEq, Default)]
