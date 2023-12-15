@@ -92,6 +92,7 @@ fn part_two_smarter(data: &str) -> i64 {
         .sum()
 }
 
+// https://github.com/coravacav/AdventOfCode/blob/main/2023-12/rust/src/part2.rs
 fn do_it<'a>(
     cache: &mut HashMap<(usize, &'a [usize], usize), usize>,
     springs: &'a [Spring],
