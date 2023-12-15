@@ -12,19 +12,7 @@ pub fn part_one(data: &str) -> i128 {
     ans as i128
 }
 
-fn part_one_inner(data: &str) -> i32 {
-    data.lines().map(|l| Row::from(l).calculate()).sum()
-}
-
-pub fn part_two(data: &str) -> i128 {
-    let now = std::time::Instant::now();
-    let ans = part_two_inner(data);
-    let elapsed = now.elapsed();
-    println!("Day 12 part 2: {}", elapsed.as_secs_f64());
-    ans
-}
-
-fn part_two_inner(data: &str) -> i128 {
+fn part_one_inner(data: &str) -> i64 {
     let rows = data.lines().map(Row::unfolded).collect::<Vec<_>>();
     println!("Rows: {:?}", rows);
 
@@ -35,7 +23,37 @@ fn part_two_inner(data: &str) -> i128 {
             s.spawn(move || {
                 let comb = row.calculate();
                 let mut s = sum.lock().unwrap();
-                (*s).0 += comb as i128;
+                (*s).0 += comb;
+                (*s).1 += 1;
+                println!("s: {}", (*s).1);
+                drop(s);
+            });
+        }
+    });
+    let s = sum.lock().unwrap();
+    (*s).0
+}
+
+pub fn part_two(data: &str) -> i128 {
+    let now = std::time::Instant::now();
+    let ans = part_two_inner(data);
+    let elapsed = now.elapsed();
+    println!("Day 12 part 2: {}", elapsed.as_secs());
+    ans as i128
+}
+
+fn part_two_inner(data: &str) -> i64 {
+    let rows = data.lines().map(Row::unfolded).collect::<Vec<_>>();
+    println!("Rows: {:?}", rows);
+
+    let sum = Arc::new(Mutex::new((0, 1)));
+    std::thread::scope(|s| {
+        for row in rows {
+            let sum = Arc::clone(&sum);
+            s.spawn(move || {
+                let comb = row.calculate();
+                let mut s = sum.lock().unwrap();
+                (*s).0 += comb;
                 (*s).1 += 1;
                 println!("s: {}", (*s).1);
                 drop(s);
@@ -59,7 +77,7 @@ struct Group {
 }
 
 impl Group {
-    fn calculate(&self, groupings: &[usize]) -> i32 {
+    fn calculate(&self, groupings: &[usize]) -> i64 {
         let mut combinations = 0;
         self.get_combinations(groupings, vec![], &mut combinations);
         println!("Calced: {combinations}");
@@ -70,7 +88,7 @@ impl Group {
         &self,
         groupings: &[usize],
         mut current_combination: Vec<Spring>,
-        combos: &mut i32,
+        combos: &mut i64,
     ) {
         let length = self.springs.len();
         if self
@@ -135,7 +153,7 @@ impl From<char> for Spring {
 }
 
 impl Row {
-    fn calculate(self) -> i32 {
+    fn calculate(self) -> i64 {
         self.groups[0].calculate(self.group_nums.as_slice())
     }
 
