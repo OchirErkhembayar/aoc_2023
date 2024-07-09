@@ -1,14 +1,12 @@
 use std::{
     char,
     collections::HashMap,
-    rc::Rc,
     sync::{Arc, Mutex},
 };
 
 pub fn part_one(data: &str) -> i128 {
     let now = std::time::Instant::now();
     let ans = part_one_inner(data);
-    let ans = 0;
     let elapsed = now.elapsed();
     println!("Day 12 part 1: {}", elapsed.as_micros());
     println!("Part 1 ans: {ans}");
@@ -45,7 +43,7 @@ pub fn part_two(data: &str) -> i128 {
 }
 
 // This doesn't work.
-fn part_two_inner(data: &str) -> i64 {
+fn _part_two_inner(data: &str) -> i64 {
     let rows = data.lines().map(Row::unfolded).collect::<Vec<_>>();
 
     let sum = Arc::new(Mutex::new((0, 1)));

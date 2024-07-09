@@ -12,6 +12,7 @@ mod ten;
 mod three;
 mod two;
 mod twelve;
+mod fourteen;
 
 const DATA_DIR: &str = "./data";
 
@@ -39,7 +40,7 @@ fn solve(day: u16, data: &str) -> (i128, i128) {
         11 => (eleven::part_one(data), eleven::part_two(data)),
         12 => (twelve::part_one(data), twelve::part_two(data)),
         13 => (42, 42),
-        14 => (42, 42),
+        14 => (fourteen::part_one(data), fourteen::part_two(data)),
         15 => (42, 42),
         16 => (42, 42),
         17 => (42, 42),
